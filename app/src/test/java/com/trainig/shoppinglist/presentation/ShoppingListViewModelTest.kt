@@ -72,21 +72,24 @@ class ShoppingListViewModelTest {
             viewModel.products.collect { }
         }
 
-        // Given
+        // Given - add products (they will be sorted alphabetically: Bread, Milk)
         viewModel.addProduct("Milk")
         advanceUntilIdle()
         viewModel.addProduct("Bread")
         advanceUntilIdle()
 
+        // After sorting, products are: [Bread, Milk]
         val allProducts = viewModel.products.value
-        viewModel.toggleProductDone(allProducts[0].id)
+        // Find Milk and toggle it as done
+        val milkProduct = allProducts.first { it.name == "Milk" }
+        viewModel.toggleProductDone(milkProduct.id)
         advanceUntilIdle()
 
         // When
         viewModel.setFilter(ProductFilter.ACTIVE)
         advanceUntilIdle()
 
-        // Then
+        // Then - Bread should be the only active product
         val activeProducts = viewModel.products.value
         assertEquals(1, activeProducts.size)
         assertEquals("Bread", activeProducts[0].name)

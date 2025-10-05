@@ -26,6 +26,7 @@ fun ShoppingListScreen(
     var productToEdit by remember { mutableStateOf<Product?>(null) }
 
     val products by viewModel.products.collectAsStateWithLifecycle(initialValue = emptyList())
+    val categories by viewModel.categories.collectAsStateWithLifecycle(initialValue = emptyList())
     val filter by viewModel.filter.collectAsStateWithLifecycle(initialValue = ProductFilter.ALL)
     val uiState by viewModel.uiState.collectAsStateWithLifecycle(initialValue = UiState.Success)
 
@@ -82,9 +83,10 @@ fun ShoppingListScreen(
     if (showAddDialog) {
         EditProductDialog(
             product = null,
+            availableCategories = categories,
             onDismiss = { showAddDialog = false },
-            onSave = { name, quantity, note ->
-                viewModel.addProduct(name, quantity, note)
+            onSave = { name, quantity, note, category ->
+                viewModel.addProduct(name, quantity, note, category)
                 showAddDialog = false
             }
         )
@@ -93,12 +95,14 @@ fun ShoppingListScreen(
     productToEdit?.let { product ->
         EditProductDialog(
             product = product,
+            availableCategories = categories,
             onDismiss = { productToEdit = null },
-            onSave = { name, quantity, note ->
+            onSave = { name, quantity, note, category ->
                 viewModel.updateProduct(product.copy(
                     name = name,
                     quantity = quantity,
-                    note = note
+                    note = note,
+                    category = category
                 ))
                 productToEdit = null
             }

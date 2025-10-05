@@ -38,6 +38,13 @@ class ShoppingListViewModel @Inject constructor(
         initialValue = emptyList()
     )
 
+    val categories = repository.getDistinctCategories()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
+
     private val _uiState = MutableStateFlow<UiState>(UiState.Success)
     val uiState: StateFlow<UiState> = _uiState
 
@@ -45,14 +52,14 @@ class ShoppingListViewModel @Inject constructor(
         _filter.value = filter
     }
 
-    fun addProduct(name: String, quantity: String? = null, note: String? = null) {
+    fun addProduct(name: String, quantity: String? = null, note: String? = null, category: String = "") {
         if (name.isBlank()) {
             _uiState.value = UiState.Error("Product name cannot be empty")
             return
         }
 
         viewModelScope.launch {
-            repository.addProduct(name, quantity, note)
+            repository.addProduct(name, quantity, note, category)
                 .onFailure { _uiState.value = UiState.Error(it.message ?: "Failed to add product") }
         }
     }

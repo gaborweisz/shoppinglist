@@ -16,12 +16,15 @@ class ShoppingListRepositoryImpl @Inject constructor(
 
     override fun getCompletedProducts(): Flow<List<Product>> = productDao.getCompletedProducts()
 
-    override suspend fun addProduct(name: String, quantity: String?, note: String?): Result<Long> {
+    override fun getDistinctCategories(): Flow<List<String>> = productDao.getDistinctCategories()
+
+    override suspend fun addProduct(name: String, quantity: String?, note: String?, category: String): Result<Long> {
         return kotlin.runCatching {
             val product = Product(
                 name = name.trim(),
                 quantity = quantity?.trim(),
-                note = note?.trim()
+                note = note?.trim(),
+                category = category.trim()
             )
             productDao.insertProduct(product)
         }

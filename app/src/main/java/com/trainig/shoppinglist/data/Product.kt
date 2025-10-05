@@ -22,6 +22,9 @@ data class Product(
     @ColumnInfo(name = "note", defaultValue = "NULL")
     val note: String? = null,
 
+    @ColumnInfo(name = "category", defaultValue = "''")
+    val category: String = "",
+
     @ColumnInfo(name = "is_done", defaultValue = "0")
     val isDone: Boolean = false
 )

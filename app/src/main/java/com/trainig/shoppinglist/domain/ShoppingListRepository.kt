@@ -7,7 +7,8 @@ interface ShoppingListRepository {
     fun getAllProducts(): Flow<List<Product>>
     fun getActiveProducts(): Flow<List<Product>>
     fun getCompletedProducts(): Flow<List<Product>>
-    suspend fun addProduct(name: String, quantity: String? = null, note: String? = null): Result<Long>
+    fun getDistinctCategories(): Flow<List<String>>
+    suspend fun addProduct(name: String, quantity: String? = null, note: String? = null, category: String = ""): Result<Long>
     suspend fun updateProduct(product: Product): Result<Unit>
     suspend fun deleteProduct(product: Product): Result<Unit>
     suspend fun toggleProductDone(productId: Long): Result<Unit>

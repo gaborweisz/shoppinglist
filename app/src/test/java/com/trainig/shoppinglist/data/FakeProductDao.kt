@@ -9,13 +9,42 @@ class FakeProductDao : ProductDao {
     private val products = MutableStateFlow<List<Product>>(emptyList())
     private var idCounter = 1L
 
-    override fun getAllProducts(): Flow<List<Product>> = products
+    override fun getAllProducts(): Flow<List<Product>> =
+        products.map { list ->
+            list.sortedWith(compareBy(
+                { if (it.category.isEmpty()) 1 else 0 },
+                { it.category },
+                { it.name }
+            ))
+        }
 
     override fun getActiveProducts(): Flow<List<Product>> =
-        products.map { list -> list.filter { !it.isDone } }
+        products.map { list ->
+            list.filter { !it.isDone }
+                .sortedWith(compareBy(
+                    { if (it.category.isEmpty()) 1 else 0 },
+                    { it.category },
+                    { it.name }
+                ))
+        }
 
     override fun getCompletedProducts(): Flow<List<Product>> =
-        products.map { list -> list.filter { it.isDone } }
+        products.map { list ->
+            list.filter { it.isDone }
+                .sortedWith(compareBy(
+                    { if (it.category.isEmpty()) 1 else 0 },
+                    { it.category },
+                    { it.name }
+                ))
+        }
+
+    override fun getDistinctCategories(): Flow<List<String>> =
+        products.map { list ->
+            list.map { it.category }
+                .filter { it.isNotEmpty() }
+                .distinct()
+                .sorted()
+        }
 
     override suspend fun insertProduct(product: Product): Long {
         val id = idCounter++
