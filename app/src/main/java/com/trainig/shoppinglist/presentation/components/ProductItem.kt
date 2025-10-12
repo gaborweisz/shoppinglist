@@ -62,7 +62,8 @@ fun ProductItem(
     onToggleDone: () -> Unit,
     onDelete: () -> Unit,
     onEdit: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    showCategory: Boolean = true
 ) {
     // Get the category color for the entire card
     val cardColor = if (product.category.isNotBlank()) {
@@ -81,32 +82,53 @@ fun ProductItem(
         onClick = onEdit,
         colors = CardDefaults.cardColors(
             containerColor = cardColor
-        )
+        ),
+        shape = androidx.compose.ui.graphics.RectangleShape,
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 0.dp,
+            pressedElevation = 0.dp,
+            focusedElevation = 0.dp,
+            hoveredElevation = 0.dp
+        ),
+        border = null
     ) {
         Row(
             modifier = Modifier
-                .padding(8.dp)
-                .fillMaxWidth(),
-            verticalAlignment = Alignment.Top
+                .padding(horizontal = 6.dp, vertical = 0.dp)
+                .fillMaxWidth()
+                .height(IntrinsicSize.Min),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Checkbox(
-                checked = product.isDone,
-                onCheckedChange = { onToggleDone() },
-                modifier = Modifier.semantics {
-                    contentDescription = if (product.isDone) {
-                        "Mark ${product.name} as not done"
-                    } else {
-                        "Mark ${product.name} as done"
-                    }
-                }
-            )
+            Box(
+                modifier = Modifier
+                    .size(46.dp)
+                    .padding(vertical = if (product.note.isNullOrBlank()) 0.dp else 4.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Checkbox(
+                    checked = product.isDone,
+                    onCheckedChange = { onToggleDone() },
+                    modifier = Modifier
+                        .semantics {
+                            contentDescription = if (product.isDone) {
+                                "Mark ${product.name} as not done"
+                            } else {
+                                "Mark ${product.name} as done"
+                            }
+                        }
+                )
+            }
 
             Column(
                 modifier = Modifier
                     .weight(1f)
-                    .padding(start = 8.dp)
+                    .padding(
+                        start = 4.dp,
+                        top = 0.dp ,
+                        bottom = 0.dp
+                    )
             ) {
-                // First line: Category, Name, and Quantity
+                // First line: Category (if showCategory is true), Name, and Quantity
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
@@ -114,18 +136,20 @@ fun ProductItem(
                     // Category badge and Product name in a Row
                     Row(
                         modifier = Modifier.weight(1f),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // Category badge (just text, no background since card is colored)
-                        product.category.takeIf { it.isNotBlank() }?.let { category ->
-                            Text(
-                                text = "📁 $category",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = Color.Black,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
+                        // Category badge (only show if showCategory is true)
+                        if (showCategory) {
+                            product.category.takeIf { it.isNotBlank() }?.let { category ->
+                                Text(
+                                    text = "📁 $category",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = Color.Black,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
                         }
 
                         // Product name
@@ -144,10 +168,11 @@ fun ProductItem(
                         Text(
                             text = quantity,
                             style = MaterialTheme.typography.bodySmall,
+                            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.padding(start = 8.dp)
+                            modifier = Modifier.padding(start = 0.dp)
                         )
                     }
                 }
@@ -165,20 +190,25 @@ fun ProductItem(
                 }
             }
 
-            // Delete button in top right corner with X icon
-            IconButton(
-                onClick = onDelete,
+            Box(
                 modifier = Modifier
                     .size(32.dp)
-                    .semantics {
-                        contentDescription = "Delete ${product.name}"
-                    }
+                    .padding(vertical = 0.dp),
+                contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    imageVector = Icons.Default.Close,
-                    contentDescription = null,
-                    modifier = Modifier.size(20.dp)
-                )
+                IconButton(
+                    onClick = onDelete,
+                    modifier = Modifier
+                        .semantics {
+                            contentDescription = "Delete ${product.name}"
+                        }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
             }
         }
     }

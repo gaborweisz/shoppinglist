@@ -118,21 +118,48 @@ private fun ProductsList(
     onEdit: (Product) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    // Group products by category
+    val groupedProducts = products.groupBy { it.category.ifBlank { "Uncategorized" } }
+
     LazyColumn(
         modifier = modifier,
         contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        verticalArrangement = Arrangement.spacedBy(0.dp)
     ) {
-        items(
-            items = products,
-            key = { product -> product.id }
-        ) { product ->
-            ProductItem(
-                product = product,
-                onToggleDone = { onToggleDone(product.id) },
-                onDelete = { onDelete(product) },
-                onEdit = { onEdit(product) }
-            )
+        groupedProducts.forEach { (category, categoryProducts) ->
+            // Category header
+            item(key = "header_$category") {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = if (category != groupedProducts.keys.first()) 12.dp else 0.dp, bottom = 4.dp)
+                ) {
+                    Text(
+                        text = category,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(bottom = 2.dp)
+                    )
+                    Divider(
+                        thickness = 2.dp,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+
+            // Products in this category
+            items(
+                items = categoryProducts,
+                key = { product -> product.id }
+            ) { product ->
+                ProductItem(
+                    product = product,
+                    onToggleDone = { onToggleDone(product.id) },
+                    onDelete = { onDelete(product) },
+                    onEdit = { onEdit(product) },
+                    showCategory = false
+                )
+            }
         }
     }
 }
