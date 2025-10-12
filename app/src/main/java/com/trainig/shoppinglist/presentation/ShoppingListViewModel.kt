@@ -93,6 +93,40 @@ class ShoppingListViewModel @Inject constructor(
     fun clearError() {
         _uiState.value = UiState.Success
     }
+
+    fun formatShoppingListForSharing(products: List<Product>): String {
+        if (products.isEmpty()) {
+            return "My Shopping List is empty"
+        }
+
+        val groupedProducts = products.groupBy { it.category.ifBlank { "Uncategorized" } }
+        val stringBuilder = StringBuilder()
+        stringBuilder.append("🛒 My Shopping List\n")
+        stringBuilder.append("━━━━━━━━━━━━━━━━━━━━\n\n")
+
+        groupedProducts.forEach { (category, categoryProducts) ->
+            stringBuilder.append("📁 $category\n")
+            stringBuilder.append("─────────────────────\n")
+
+            categoryProducts.forEachIndexed { index, product ->
+                val checkbox = if (product.isDone) "☑" else "☐"
+                stringBuilder.append("$checkbox ${product.name}")
+
+                if (!product.quantity.isNullOrBlank()) {
+                    stringBuilder.append(" - ${product.quantity}")
+                }
+
+                if (!product.note.isNullOrBlank()) {
+                    stringBuilder.append("\n   Note: ${product.note}")
+                }
+
+                stringBuilder.append("\n")
+            }
+            stringBuilder.append("\n")
+        }
+
+        return stringBuilder.toString()
+    }
 }
 
 enum class ProductFilter {

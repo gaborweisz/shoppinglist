@@ -5,16 +5,23 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.trainig.shoppinglist.data.Product
 import com.trainig.shoppinglist.presentation.components.EditProductDialog
 import com.trainig.shoppinglist.presentation.components.ProductItem
+import android.content.Intent
+
+// Constants
+private val BackgroundColor = androidx.compose.ui.graphics.Color(0xFFF2EFE1)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -24,6 +31,7 @@ fun ShoppingListScreen(
 ) {
     var showAddDialog by remember { mutableStateOf(false) }
     var productToEdit by remember { mutableStateOf<Product?>(null) }
+    val context = LocalContext.current
 
     val products by viewModel.products.collectAsStateWithLifecycle(initialValue = emptyList())
     val categories by viewModel.categories.collectAsStateWithLifecycle(initialValue = emptyList())
@@ -32,16 +40,32 @@ fun ShoppingListScreen(
 
     Scaffold(
         modifier = modifier,
+        containerColor = BackgroundColor,
         topBar = {
             TopAppBar(
-                title = { Text("Shopping List") },
-                actions = {
-                    FilterChips(
-                        currentFilter = filter,
-                        onFilterSelected = viewModel::setFilter,
-                        modifier = Modifier.padding(end = 8.dp)
+                title = {
+                    Text(
+                        "Shopping List",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = androidx.compose.ui.graphics.Color(0xFF00008B)
                     )
-                }
+                },
+                actions = {
+                    IconButton(
+                        onClick = { /* TODO: Navigate to cart screen */ },
+                        modifier = Modifier.padding(end = 8.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ShoppingCart,
+                            contentDescription = "View cart",
+                            tint = androidx.compose.ui.graphics.Color(0xFF00008B)
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = BackgroundColor
+                ),
+                modifier = Modifier.height(60.dp)
             )
         },
         floatingActionButton = {
@@ -52,30 +76,94 @@ fun ShoppingListScreen(
             }
         }
     ) { paddingValues ->
-        Box(modifier = Modifier.padding(paddingValues)) {
-            if (products.isEmpty()) {
-                EmptyState(
-                    modifier = Modifier.fillMaxSize(),
-                    filter = filter
-                )
-            } else {
-                ProductsList(
-                    products = products,
-                    onToggleDone = viewModel::toggleProductDone,
-                    onDelete = viewModel::deleteProduct,
-                    onEdit = { productToEdit = it },
-                    modifier = Modifier.fillMaxSize()
-                )
+        Column(modifier = Modifier.padding(paddingValues)) {
+            // Filter chips and share button on the same row
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Share button on the left
+                IconButton(
+                    onClick = {
+                        val shareText = viewModel.formatShoppingListForSharing(products)
+                        val sendIntent = Intent().apply {
+                            action = Intent.ACTION_SEND
+                            putExtra(Intent.EXTRA_TEXT, shareText)
+                            type = "text/plain"
+                            // Try to open Facebook Messenger specifically
+                            setPackage("com.facebook.orca")
+                        }
+
+                        // Check if Messenger is installed, if not use general share
+                        try {
+                            context.startActivity(sendIntent)
+                        } catch (e: Exception) {
+                            // Messenger not installed, use general share chooser
+                            val chooserIntent = Intent.createChooser(
+                                sendIntent.apply { setPackage(null) },
+                                "Share Shopping List"
+                            )
+                            context.startActivity(chooserIntent)
+                        }
+                    }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Share,
+                        contentDescription = "Share shopping list"
+                    )
+                }
+
+                // Filter chips on the right
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    FilterChip(
+                        selected = filter == ProductFilter.ALL,
+                        onClick = { viewModel.setFilter(ProductFilter.ALL) },
+                        label = { Text("All") }
+                    )
+                    FilterChip(
+                        selected = filter == ProductFilter.ACTIVE,
+                        onClick = { viewModel.setFilter(ProductFilter.ACTIVE) },
+                        label = { Text("Active") }
+                    )
+                    FilterChip(
+                        selected = filter == ProductFilter.COMPLETED,
+                        onClick = { viewModel.setFilter(ProductFilter.COMPLETED) },
+                        label = { Text("Completed") }
+                    )
+                }
             }
 
-            if (uiState is UiState.Error) {
-                ErrorSnackbar(
-                    message = (uiState as UiState.Error).message,
-                    onDismiss = viewModel::clearError,
-                    modifier = Modifier
-                        .padding(16.dp)
-                        .align(Alignment.BottomCenter)
-                )
+            Box(modifier = Modifier.weight(1f)) {
+                if (products.isEmpty()) {
+                    EmptyState(
+                        modifier = Modifier.fillMaxSize(),
+                        filter = filter
+                    )
+                } else {
+                    ProductsList(
+                        products = products,
+                        onToggleDone = viewModel::toggleProductDone,
+                        onDelete = viewModel::deleteProduct,
+                        onEdit = { productToEdit = it },
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+
+                if (uiState is UiState.Error) {
+                    ErrorSnackbar(
+                        message = (uiState as UiState.Error).message,
+                        onDismiss = viewModel::clearError,
+                        modifier = Modifier
+                            .padding(16.dp)
+                            .align(Alignment.BottomCenter)
+                    )
+                }
             }
         }
     }
