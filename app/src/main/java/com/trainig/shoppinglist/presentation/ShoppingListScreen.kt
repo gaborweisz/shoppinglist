@@ -3,15 +3,16 @@ package com.trainig.shoppinglist.presentation
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -22,9 +23,6 @@ import com.trainig.shoppinglist.presentation.components.ProductItem
 import android.content.Intent
 import com.trainig.shoppinglist.R
 
-// Constants
-private val BackgroundColor = androidx.compose.ui.graphics.Color(0xFFF2EFE1)
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ShoppingListScreen(
@@ -34,22 +32,37 @@ fun ShoppingListScreen(
     var showAddDialog by remember { mutableStateOf(false) }
     var productToEdit by remember { mutableStateOf<Product?>(null) }
     val context = LocalContext.current
+    val isDarkTheme = isSystemInDarkTheme()
 
     val products by viewModel.products.collectAsStateWithLifecycle(initialValue = emptyList())
     val categories by viewModel.categories.collectAsStateWithLifecycle(initialValue = emptyList())
     val filter by viewModel.filter.collectAsStateWithLifecycle(initialValue = ProductFilter.ALL)
     val uiState by viewModel.uiState.collectAsStateWithLifecycle(initialValue = UiState.Success)
 
+    // Dynamic background color based on theme
+    val backgroundColor = if (isDarkTheme) {
+        androidx.compose.ui.graphics.Color(0xFF2E2E2E) // Dark grey for dark mode
+    } else {
+        androidx.compose.ui.graphics.Color(0xFFFFFFF0) // Ivory for light mode
+    }
+
+    // Use lighter blue in dark mode, darker blue in light mode
+    val titleIconColor = if (isDarkTheme) {
+        androidx.compose.ui.graphics.Color(0xFF6B9EFF) // Lighter blue for dark mode
+    } else {
+        androidx.compose.ui.graphics.Color(0xFF00008B) // Dark blue for light mode
+    }
+
     Scaffold(
         modifier = modifier,
-        containerColor = BackgroundColor,
+        containerColor = backgroundColor,
         topBar = {
             TopAppBar(
                 title = {
                     Text(
                         stringResource(R.string.shopping_list),
                         style = MaterialTheme.typography.titleLarge,
-                        color = androidx.compose.ui.graphics.Color(0xFF00008B)
+                        color = titleIconColor
                     )
                 },
                 actions = {
@@ -58,14 +71,14 @@ fun ShoppingListScreen(
                         modifier = Modifier.padding(end = 8.dp)
                     ) {
                         Icon(
-                            imageVector = Icons.Default.ShoppingCart,
+                            painter = painterResource(id = R.drawable.shopping_list),
                             contentDescription = stringResource(R.string.view_cart),
-                            tint = androidx.compose.ui.graphics.Color(0xFF00008B)
+                            tint = titleIconColor
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = BackgroundColor
+                    containerColor = backgroundColor
                 ),
                 modifier = Modifier.height(60.dp)
             )

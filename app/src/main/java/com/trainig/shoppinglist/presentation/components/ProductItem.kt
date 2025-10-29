@@ -1,6 +1,7 @@
 package com.trainig.shoppinglist.presentation.components
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
@@ -16,14 +17,23 @@ import androidx.compose.ui.unit.dp
 import com.trainig.shoppinglist.data.Product
 import kotlin.math.abs
 
-// Generate a consistent light pastel color for each category
-private fun getCategoryColor(category: String): Color {
+// Generate a consistent color for each category based on theme
+private fun getCategoryColor(category: String, isDarkTheme: Boolean): Color {
     val hash = category.hashCode()
     val hue = abs(hash % 360)
 
-    // Convert HSL to RGB with light saturation and high lightness for pastel colors
-    val saturation = 0.35f + (abs(hash / 360) % 20) / 100f // 35-55% saturation
-    val lightness = 0.85f + (abs(hash / 720) % 10) / 100f // 85-95% lightness
+    // Adjust saturation and lightness based on theme
+    val saturation = if (isDarkTheme) {
+        0.45f + (abs(hash / 360) % 25) / 100f // 45-70% saturation for dark mode
+    } else {
+        0.35f + (abs(hash / 360) % 20) / 100f // 35-55% saturation for light mode
+    }
+
+    val lightness = if (isDarkTheme) {
+        0.25f + (abs(hash / 720) % 15) / 100f // 25-40% lightness for dark mode (darker colors)
+    } else {
+        0.85f + (abs(hash / 720) % 10) / 100f // 85-95% lightness for light mode (pastel colors)
+    }
 
     return hslToRgb(hue.toFloat(), saturation, lightness)
 }
@@ -66,11 +76,20 @@ fun ProductItem(
     showCategory: Boolean = true,
     showDelete: Boolean = true
 ) {
-    // Get the category color for the entire card
+    val isDarkTheme = isSystemInDarkTheme()
+
+    // Get the category color for the entire card based on theme
     val cardColor = if (product.category.isNotBlank()) {
-        getCategoryColor(product.category)
+        getCategoryColor(product.category, isDarkTheme)
     } else {
         MaterialTheme.colorScheme.surface
+    }
+
+    // Adjust text color based on background darkness
+    val textColor = if (product.category.isNotBlank() && isDarkTheme) {
+        Color.White
+    } else {
+        Color.Black
     }
 
     Card(
@@ -146,7 +165,7 @@ fun ProductItem(
                                 Text(
                                     text = "📁 $category",
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = Color.Black,
+                                    color = textColor,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis
                                 )
@@ -157,6 +176,7 @@ fun ProductItem(
                         Text(
                             text = product.name,
                             style = MaterialTheme.typography.bodyMedium,
+                            color = textColor,
                             textDecoration = if (product.isDone) TextDecoration.LineThrough else null,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
@@ -170,7 +190,10 @@ fun ProductItem(
                             text = quantity,
                             style = MaterialTheme.typography.bodySmall,
                             fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = if (isDarkTheme && product.category.isNotBlank())
+                                Color.White.copy(alpha = 0.7f)
+                            else
+                                MaterialTheme.colorScheme.onSurfaceVariant,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                             modifier = Modifier.padding(start = 0.dp)
@@ -183,7 +206,10 @@ fun ProductItem(
                     Text(
                         text = note,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = if (isDarkTheme && product.category.isNotBlank())
+                            Color.White.copy(alpha = 0.7f)
+                        else
+                            MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.padding(top = 4.dp)
