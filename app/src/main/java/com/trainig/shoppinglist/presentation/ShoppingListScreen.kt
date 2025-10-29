@@ -12,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -19,6 +20,7 @@ import com.trainig.shoppinglist.data.Product
 import com.trainig.shoppinglist.presentation.components.EditProductDialog
 import com.trainig.shoppinglist.presentation.components.ProductItem
 import android.content.Intent
+import com.trainig.shoppinglist.R
 
 // Constants
 private val BackgroundColor = androidx.compose.ui.graphics.Color(0xFFF2EFE1)
@@ -45,7 +47,7 @@ fun ShoppingListScreen(
             TopAppBar(
                 title = {
                     Text(
-                        "Shopping List",
+                        stringResource(R.string.shopping_list),
                         style = MaterialTheme.typography.titleLarge,
                         color = androidx.compose.ui.graphics.Color(0xFF00008B)
                     )
@@ -57,7 +59,7 @@ fun ShoppingListScreen(
                     ) {
                         Icon(
                             imageVector = Icons.Default.ShoppingCart,
-                            contentDescription = "View cart",
+                            contentDescription = stringResource(R.string.view_cart),
                             tint = androidx.compose.ui.graphics.Color(0xFF00008B)
                         )
                     }
@@ -72,7 +74,7 @@ fun ShoppingListScreen(
             FloatingActionButton(
                 onClick = { showAddDialog = true }
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Add product")
+                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_product))
             }
         }
     ) { paddingValues ->
@@ -104,7 +106,7 @@ fun ShoppingListScreen(
                             // Messenger not installed, use general share chooser
                             val chooserIntent = Intent.createChooser(
                                 sendIntent.apply { setPackage(null) },
-                                "Share Shopping List"
+                                context.getString(R.string.share_shopping_list)
                             )
                             context.startActivity(chooserIntent)
                         }
@@ -112,7 +114,7 @@ fun ShoppingListScreen(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Share,
-                        contentDescription = "Share shopping list"
+                        contentDescription = stringResource(R.string.share_shopping_list)
                     )
                 }
 
@@ -122,19 +124,19 @@ fun ShoppingListScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     FilterChip(
-                        selected = filter == ProductFilter.ALL,
-                        onClick = { viewModel.setFilter(ProductFilter.ALL) },
-                        label = { Text("All") }
-                    )
-                    FilterChip(
                         selected = filter == ProductFilter.ACTIVE,
                         onClick = { viewModel.setFilter(ProductFilter.ACTIVE) },
-                        label = { Text("Active") }
+                        label = { Text(stringResource(R.string.filter_active)) }
                     )
                     FilterChip(
                         selected = filter == ProductFilter.COMPLETED,
                         onClick = { viewModel.setFilter(ProductFilter.COMPLETED) },
-                        label = { Text("Completed") }
+                        label = { Text(stringResource(R.string.filter_completed)) }
+                    )
+                    FilterChip(
+                        selected = filter == ProductFilter.ALL,
+                        onClick = { viewModel.setFilter(ProductFilter.ALL) },
+                        label = { Text(stringResource(R.string.filter_all)) }
                     )
                 }
             }
@@ -148,6 +150,7 @@ fun ShoppingListScreen(
                 } else {
                     ProductsList(
                         products = products,
+                        filter = filter,
                         onToggleDone = viewModel::toggleProductDone,
                         onDelete = viewModel::deleteProduct,
                         onEdit = { productToEdit = it },
@@ -201,13 +204,15 @@ fun ShoppingListScreen(
 @Composable
 private fun ProductsList(
     products: List<Product>,
+    filter: ProductFilter,
     onToggleDone: (Long) -> Unit,
     onDelete: (Product) -> Unit,
     onEdit: (Product) -> Unit,
     modifier: Modifier = Modifier
 ) {
     // Group products by category
-    val groupedProducts = products.groupBy { it.category.ifBlank { "Uncategorized" } }
+    val uncategorizedLabel = stringResource(R.string.uncategorized)
+    val groupedProducts = products.groupBy { it.category.ifBlank { uncategorizedLabel } }
 
     LazyColumn(
         modifier = modifier,
@@ -245,7 +250,8 @@ private fun ProductsList(
                     onToggleDone = { onToggleDone(product.id) },
                     onDelete = { onDelete(product) },
                     onEdit = { onEdit(product) },
-                    showCategory = false
+                    showCategory = false,
+                    showDelete = filter == ProductFilter.ALL
                 )
             }
         }
@@ -263,7 +269,7 @@ private fun ErrorSnackbar(
             .padding(16.dp),
         action = {
             TextButton(onClick = onDismiss) {
-                Text("Dismiss")
+                Text(stringResource(R.string.dismiss))
             }
         }
     ) {
@@ -312,17 +318,17 @@ private fun EmptyState(
     ) {
         Text(
             text = when (filter) {
-                ProductFilter.ALL -> "No items in your shopping list"
-                ProductFilter.ACTIVE -> "No active items"
-                ProductFilter.COMPLETED -> "No completed items"
+                ProductFilter.ALL -> stringResource(R.string.no_items)
+                ProductFilter.ACTIVE -> stringResource(R.string.no_active_items)
+                ProductFilter.COMPLETED -> stringResource(R.string.no_completed_items)
             },
             style = MaterialTheme.typography.bodyLarge
         )
         Text(
             text = when (filter) {
-                ProductFilter.ALL -> "Tap + to add items"
-                ProductFilter.ACTIVE -> "All items are completed"
-                ProductFilter.COMPLETED -> "Complete some items to see them here"
+                ProductFilter.ALL -> stringResource(R.string.tap_to_add_items)
+                ProductFilter.ACTIVE -> stringResource(R.string.all_items_completed)
+                ProductFilter.COMPLETED -> stringResource(R.string.complete_items_to_see)
             },
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant

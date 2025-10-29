@@ -1,0 +1,28 @@
+<resources>
+    <string name="app_name">Einkaufsliste</string>
+    <string name="shopping_list">Einkaufsliste</string>
+    <string name="filter_active">Aktiv</string>
+    <string name="filter_completed">Erledigt</string>
+    <string name="filter_all">Alle</string>
+    <string name="add_product">Produkt hinzufügen</string>
+    <string name="share_shopping_list">Einkaufsliste teilen</string>
+    <string name="view_cart">Warenkorb ansehen</string>
+    <string name="no_items">Keine Artikel in Ihrer Einkaufsliste</string>
+    <string name="no_active_items">Keine aktiven Artikel</string>
+    <string name="no_completed_items">Keine erledigten Artikel</string>
+    <string name="tap_to_add_items">Tippen Sie auf +, um Artikel hinzuzufügen</string>
+    <string name="all_items_completed">Alle Artikel sind erledigt</string>
+    <string name="complete_items_to_see">Erledigen Sie einige Artikel, um sie hier zu sehen</string>
+    <string name="dismiss">Schließen</string>
+    <string name="uncategorized">Unkategorisiert</string>
+    <string name="edit_product">Produkt Bearbeiten</string>
+    <string name="add_product_title">Neues Produkt</string>
+    <string name="name">Name</string>
+    <string name="quantity">Menge</string>
+    <string name="optional">optional</string>
+    <string name="category">Kategorie</string>
+    <string name="note">Notiz</string>
+    <string name="save">Speichern</string>
+    <string name="cancel">Abbrechen</string>
+</resources>
+

@@ -2,7 +2,7 @@ package com.trainig.shoppinglist.presentation.components
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -63,7 +63,8 @@ fun ProductItem(
     onDelete: () -> Unit,
     onEdit: () -> Unit,
     modifier: Modifier = Modifier,
-    showCategory: Boolean = true
+    showCategory: Boolean = true,
+    showDelete: Boolean = true
 ) {
     // Get the category color for the entire card
     val cardColor = if (product.category.isNotBlank()) {
@@ -190,24 +191,27 @@ fun ProductItem(
                 }
             }
 
-            Box(
-                modifier = Modifier
-                    .size(32.dp)
-                    .padding(vertical = 0.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                IconButton(
-                    onClick = onDelete,
+            if (showDelete) {
+                Box(
                     modifier = Modifier
-                        .semantics {
-                            contentDescription = "Delete ${product.name}"
-                        }
+                        .size(32.dp)
+                        .padding(vertical = 0.dp),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Close,
-                        contentDescription = null,
-                        modifier = Modifier.size(20.dp)
-                    )
+                    IconButton(
+                        onClick = onDelete,
+                        modifier = Modifier
+                            .semantics {
+                                contentDescription = "Delete ${product.name}"
+                            }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
                 }
             }
         }

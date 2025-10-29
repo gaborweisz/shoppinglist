@@ -4,8 +4,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.trainig.shoppinglist.data.Product
+import com.trainig.shoppinglist.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,7 +40,14 @@ fun EditProductDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(if (product == null) "Add Product" else "Edit Product") },
+        title = {
+            Text(
+                if (product == null)
+                    stringResource(R.string.add_product_title)
+                else
+                    stringResource(R.string.edit_product)
+            )
+        },
         text = {
             Column(
                 modifier = Modifier
@@ -52,7 +61,7 @@ fun EditProductDialog(
                         name = it
                         showError = false
                     },
-                    label = { Text("Name") },
+                    label = { Text(stringResource(R.string.name)) },
                     isError = showError && name.all { it.isWhitespace() },
                     supportingText = if (showError && name.all { it.isWhitespace() }) {
                         { Text("Name cannot be empty") }
@@ -63,7 +72,7 @@ fun EditProductDialog(
                 OutlinedTextField(
                     value = quantity,
                     onValueChange = { quantity = it },
-                    label = { Text("Quantity (optional)") },
+                    label = { Text("${stringResource(R.string.quantity)} (${stringResource(R.string.optional)})") },
                     modifier = Modifier.fillMaxWidth()
                 )
 
@@ -87,7 +96,7 @@ fun EditProductDialog(
                             category = newValue
                             expanded = true // Show dropdown when typing
                         },
-                        label = { Text("Category (optional)") },
+                        label = { Text("${stringResource(R.string.category)} (${stringResource(R.string.optional)})") },
                         trailingIcon = {
                             ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
                         },
@@ -122,7 +131,7 @@ fun EditProductDialog(
                 OutlinedTextField(
                     value = note,
                     onValueChange = { note = it },
-                    label = { Text("Note (optional)") },
+                    label = { Text("${stringResource(R.string.note)} (${stringResource(R.string.optional)})") },
                     modifier = Modifier.fillMaxWidth(),
                     minLines = 2
                 )
@@ -143,12 +152,12 @@ fun EditProductDialog(
                     )
                 }
             ) {
-                Text("Save")
+                Text(stringResource(R.string.save))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(stringResource(R.string.cancel))
             }
         }
     )
