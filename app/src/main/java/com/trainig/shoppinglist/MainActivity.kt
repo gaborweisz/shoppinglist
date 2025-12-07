@@ -11,13 +11,21 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
+import com.trainig.shoppinglist.data.ThemePreferences
 import com.trainig.shoppinglist.presentation.ShoppingListScreen
 import com.trainig.shoppinglist.ui.theme.ShoppingListTheme
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 import java.util.Locale
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    @Inject
+    lateinit var themePreferences: ThemePreferences
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -35,13 +43,22 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun attachBaseContext(newBase: Context) {
-        super.attachBaseContext(updateBaseContextLocale(newBase))
-    }
+        // Apply saved language preference on startup
+        val context = runBlocking {
+            val prefs = com.trainig.shoppinglist.data.ThemePreferencesImpl(newBase)
+            val languageCode = prefs.language.first()
 
-    private fun updateBaseContextLocale(context: Context): Context {
-        // This will be called when the activity is created
-        // The actual locale will be set from the ShoppingListScreen using the stored preference
-        return context
+            // Default to English if no language is saved
+            val locale = Locale(languageCode ?: "en")
+            Locale.setDefault(locale)
+
+            val config = Configuration(newBase.resources.configuration)
+            config.setLocale(locale)
+
+            newBase.createConfigurationContext(config)
+        }
+
+        super.attachBaseContext(context)
     }
 
     fun setLocale(languageCode: String) {
