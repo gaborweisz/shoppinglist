@@ -16,6 +16,7 @@
     <string name="dismiss">Bezárás</string>
     <string name="uncategorized">Kategorizálatlan</string>
     <string name="edit_product">Termék Módosítása</string>
+    <string name="edit_category">Kategória Módosítása</string>
     <string name="add_product_title">Új Termék</string>
     <string name="name">Név</string>
     <string name="quantity">Mennyiség</string>

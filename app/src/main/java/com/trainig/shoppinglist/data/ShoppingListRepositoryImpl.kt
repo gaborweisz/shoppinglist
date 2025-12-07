@@ -50,4 +50,10 @@ class ShoppingListRepositoryImpl @Inject constructor(
             }
         }
     }
+
+    override suspend fun updateCategory(oldCategory: String, newCategory: String): Result<Unit> {
+        return kotlin.runCatching {
+            productDao.updateCategory(oldCategory.trim(), newCategory.trim())
+        }
+    }
 }

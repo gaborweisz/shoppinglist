@@ -23,17 +23,14 @@ fun EditProductDialog(
     var category by remember(product) { mutableStateOf(product?.category ?: "") }
     var showError by remember { mutableStateOf(false) }
     var expanded by remember { mutableStateOf(false) }
-    var isTyping by remember { mutableStateOf(false) }
 
-    // Filter categories based on current input only when actively typing
-    val filteredCategories = remember(category, availableCategories, isTyping) {
-        if (!isTyping || category.isEmpty()) {
-            // Show all categories when not typing or when category is empty
+    // Filter categories based on current input
+    val filteredCategories = remember(category, availableCategories) {
+        if (category.isEmpty()) {
             availableCategories
         } else {
-            // Filter only when user is actively typing
-            availableCategories.filter {
-                it.contains(category, ignoreCase = true)
+            availableCategories.filter { categoryOption ->
+                categoryOption.contains(category as CharSequence, ignoreCase = true)
             }
         }
     }
@@ -81,18 +78,12 @@ fun EditProductDialog(
                     expanded = expanded,
                     onExpandedChange = { newExpanded ->
                         expanded = newExpanded
-                        if (newExpanded) {
-                            // When opening dropdown, reset typing flag to show all categories
-                            isTyping = false
-                        }
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     OutlinedTextField(
                         value = category,
                         onValueChange = { newValue ->
-                            // Always mark as typing when the value changes (including backspace)
-                            isTyping = true
                             category = newValue
                             expanded = true // Show dropdown when typing
                         },
@@ -111,8 +102,8 @@ fun EditProductDialog(
                             expanded = expanded,
                             onDismissRequest = {
                                 expanded = false
-                                isTyping = false
-                            }
+                            },
+                            modifier = Modifier.heightIn(max = 200.dp)
                         ) {
                             filteredCategories.forEach { categoryOption ->
                                 DropdownMenuItem(
@@ -120,7 +111,6 @@ fun EditProductDialog(
                                     onClick = {
                                         category = categoryOption
                                         expanded = false
-                                        isTyping = false
                                     }
                                 )
                             }

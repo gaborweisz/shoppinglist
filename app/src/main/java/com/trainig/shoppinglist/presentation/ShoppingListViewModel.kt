@@ -90,6 +90,13 @@ class ShoppingListViewModel @Inject constructor(
         }
     }
 
+    fun updateCategory(oldCategory: String, newCategory: String) {
+        viewModelScope.launch {
+            repository.updateCategory(oldCategory, newCategory)
+                .onFailure { _uiState.value = UiState.Error(it.message ?: "Failed to update category") }
+        }
+    }
+
     fun clearError() {
         _uiState.value = UiState.Success
     }

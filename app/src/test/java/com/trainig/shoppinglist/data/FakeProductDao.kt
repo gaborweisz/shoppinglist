@@ -71,4 +71,16 @@ class FakeProductDao : ProductDao {
             currentList.filter { it.id != productId }
         }
     }
+
+    override suspend fun updateCategory(oldCategory: String, newCategory: String) {
+        products.update { currentList ->
+            currentList.map { product ->
+                if (product.category == oldCategory) {
+                    product.copy(category = newCategory)
+                } else {
+                    product
+                }
+            }
+        }
+    }
 }

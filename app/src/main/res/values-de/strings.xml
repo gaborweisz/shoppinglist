@@ -16,6 +16,7 @@
     <string name="dismiss">Schließen</string>
     <string name="uncategorized">Unkategorisiert</string>
     <string name="edit_product">Produkt Bearbeiten</string>
+    <string name="edit_category">Kategorie Bearbeiten</string>
     <string name="add_product_title">Neues Produkt</string>
     <string name="name">Name</string>
     <string name="quantity">Menge</string>
@@ -25,4 +26,3 @@
     <string name="save">Speichern</string>
     <string name="cancel">Abbrechen</string>
 </resources>
-

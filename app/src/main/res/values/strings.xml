@@ -16,6 +16,7 @@
     <string name="dismiss">Dismiss</string>
     <string name="uncategorized">Uncategorized</string>
     <string name="edit_product">Edit Product</string>
+    <string name="edit_category">Edit Category</string>
     <string name="add_product_title">Add Product</string>
     <string name="name">Name</string>
     <string name="quantity">Quantity</string>

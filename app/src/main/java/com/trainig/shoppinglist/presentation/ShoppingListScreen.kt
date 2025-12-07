@@ -1,5 +1,6 @@
 package com.trainig.shoppinglist.presentation
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -19,6 +20,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.trainig.shoppinglist.data.Product
 import com.trainig.shoppinglist.presentation.components.EditProductDialog
+import com.trainig.shoppinglist.presentation.components.EditCategoryDialog
 import com.trainig.shoppinglist.presentation.components.ProductItem
 import android.content.Intent
 import com.trainig.shoppinglist.R
@@ -31,6 +33,7 @@ fun ShoppingListScreen(
 ) {
     var showAddDialog by remember { mutableStateOf(false) }
     var productToEdit by remember { mutableStateOf<Product?>(null) }
+    var categoryToEdit by remember { mutableStateOf<String?>(null) }
     val context = LocalContext.current
     val isDarkTheme = isSystemInDarkTheme()
 
@@ -167,6 +170,7 @@ fun ShoppingListScreen(
                         onToggleDone = viewModel::toggleProductDone,
                         onDelete = viewModel::deleteProduct,
                         onEdit = { productToEdit = it },
+                        onCategoryClick = { categoryToEdit = it },
                         modifier = Modifier.fillMaxSize()
                     )
                 }
@@ -202,13 +206,34 @@ fun ShoppingListScreen(
             availableCategories = categories,
             onDismiss = { productToEdit = null },
             onSave = { name, quantity, note, category ->
-                viewModel.updateProduct(product.copy(
-                    name = name,
-                    quantity = quantity,
-                    note = note,
-                    category = category
-                ))
+                // Check if category has changed
+                val oldCategory = product.category
+                val newCategory = category.trim()
+
+                if (oldCategory != newCategory && oldCategory.isNotBlank()) {
+                    // Update all products with the old category to the new category
+                    viewModel.updateCategory(oldCategory, newCategory)
+                } else {
+                    // Just update the current product
+                    viewModel.updateProduct(product.copy(
+                        name = name,
+                        quantity = quantity,
+                        note = note,
+                        category = newCategory
+                    ))
+                }
                 productToEdit = null
+            }
+        )
+    }
+
+    categoryToEdit?.let { category ->
+        EditCategoryDialog(
+            currentCategory = category,
+            onDismiss = { categoryToEdit = null },
+            onSave = { newCategory ->
+                viewModel.updateCategory(category, newCategory)
+                categoryToEdit = null
             }
         )
     }
@@ -221,6 +246,7 @@ private fun ProductsList(
     onToggleDone: (Long) -> Unit,
     onDelete: (Product) -> Unit,
     onEdit: (Product) -> Unit,
+    onCategoryClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     // Group products by category
@@ -233,12 +259,19 @@ private fun ProductsList(
         verticalArrangement = Arrangement.spacedBy(0.dp)
     ) {
         groupedProducts.forEach { (category, categoryProducts) ->
-            // Category header
+            // Category header - clickable only if not "Uncategorized"
             item(key = "header_$category") {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = if (category != groupedProducts.keys.first()) 12.dp else 0.dp, bottom = 4.dp)
+                        .then(
+                            if (category != uncategorizedLabel) {
+                                Modifier.clickable { onCategoryClick(category) }
+                            } else {
+                                Modifier
+                            }
+                        )
                 ) {
                     Text(
                         text = category,
