@@ -9,11 +9,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.trainig.shoppinglist.R
 import com.trainig.shoppinglist.data.Product
 import kotlin.math.abs
 
@@ -24,7 +26,7 @@ private fun getCategoryColor(category: String, isDarkTheme: Boolean): Color {
 
     // Adjust saturation and lightness based on theme
     val saturation = if (isDarkTheme) {
-        0.45f + (abs(hash / 360) % 25) / 100f // 45-70% saturation for dark mode
+        0.25f + (abs(hash / 360) % 15) / 100f // 25-40% saturation for dark mode (lower saturation)
     } else {
         0.35f + (abs(hash / 360) % 20) / 100f // 35-55% saturation for light mode
     }
@@ -75,7 +77,12 @@ fun ProductItem(
     modifier: Modifier = Modifier,
     showCategory: Boolean = true,
     showDelete: Boolean = true,
-    isDarkTheme: Boolean = isSystemInDarkTheme()
+    isDarkTheme: Boolean = isSystemInDarkTheme(),
+    filter: com.trainig.shoppinglist.presentation.ProductFilter = com.trainig.shoppinglist.presentation.ProductFilter.ALL,
+    onAddToActive: () -> Unit = {},
+    onRemoveFromActive: () -> Unit = {},
+    onMarkCompleted: () -> Unit = {},
+    onMoveBackToActive: () -> Unit = {}
 ) {
     // Get the category color for the entire card based on theme
     val cardColor = if (product.category.isNotBlank()) {
@@ -115,27 +122,37 @@ fun ProductItem(
             modifier = Modifier
                 .padding(horizontal = 6.dp, vertical = 0.dp)
                 .fillMaxWidth()
-                .height(IntrinsicSize.Min),
+                .then(
+                    // Increase minimum height for All list items
+                    if (filter == com.trainig.shoppinglist.presentation.ProductFilter.ALL) {
+                        Modifier.heightIn(min = 44.dp)
+                    } else {
+                        Modifier.height(IntrinsicSize.Min)
+                    }
+                ),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Box(
-                modifier = Modifier
-                    .size(46.dp)
-                    .padding(vertical = if (product.note.isNullOrBlank()) 0.dp else 4.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Checkbox(
-                    checked = product.isDone,
-                    onCheckedChange = { onToggleDone() },
+            // Show checkbox only for Active and Completed filters, not for All
+            if (filter != com.trainig.shoppinglist.presentation.ProductFilter.ALL) {
+                Box(
                     modifier = Modifier
-                        .semantics {
-                            contentDescription = if (product.isDone) {
-                                "Mark ${product.name} as not done"
-                            } else {
-                                "Mark ${product.name} as done"
+                        .size(46.dp)
+                        .padding(vertical = if (product.note.isNullOrBlank()) 0.dp else 4.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Checkbox(
+                        checked = product.isDone,
+                        onCheckedChange = { onToggleDone() },
+                        modifier = Modifier
+                            .semantics {
+                                contentDescription = if (product.isDone) {
+                                    "Mark ${product.name} as not done"
+                                } else {
+                                    "Mark ${product.name} as done"
+                                }
                             }
-                        }
-                )
+                    )
+                }
             }
 
             Column(
@@ -216,27 +233,69 @@ fun ProductItem(
                 }
             }
 
-            if (showDelete) {
-                Box(
-                    modifier = Modifier
-                        .size(32.dp)
-                        .padding(vertical = 0.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    IconButton(
-                        onClick = onDelete,
-                        modifier = Modifier
-                            .semantics {
-                                contentDescription = "Delete ${product.name}"
-                            }
+            // Action buttons based on filter
+            when (filter) {
+                com.trainig.shoppinglist.presentation.ProductFilter.ALL -> {
+                    // Show "Add to list" and "Remove from list" buttons
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        modifier = Modifier.padding(start = 4.dp)
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Delete,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.error,
-                            modifier = Modifier.size(20.dp)
-                        )
+                        // Add to list button - smaller size
+                        Button(
+                            onClick = onAddToActive,
+                            modifier = Modifier.height(28.dp),
+                            contentPadding = PaddingValues(horizontal = 6.dp, vertical = 0.dp),
+                            enabled = !product.isActive && !product.isDone
+                        ) {
+                            Text(
+                                text = stringResource(R.string.button_add),
+                                style = MaterialTheme.typography.labelSmall
+                            )
+                        }
+
+                        // Remove button - removes from active and completed lists
+                        Button(
+                            onClick = onRemoveFromActive,
+                            modifier = Modifier.height(28.dp),
+                            contentPadding = PaddingValues(horizontal = 6.dp, vertical = 0.dp),
+                            enabled = product.isActive || product.isDone,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                            )
+                        ) {
+                            Text(
+                                text = stringResource(R.string.button_remove),
+                                style = MaterialTheme.typography.labelSmall
+                            )
+                        }
+
+                        // Delete button (delete from all)
+                        if (showDelete) {
+                            IconButton(
+                                onClick = onDelete,
+                                modifier = Modifier
+                                    .size(28.dp)
+                                    .semantics {
+                                        contentDescription = "Delete ${product.name}"
+                                    }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Delete,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.error,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                        }
                     }
+                }
+                com.trainig.shoppinglist.presentation.ProductFilter.ACTIVE -> {
+                    // No action buttons for Active list
+                }
+                com.trainig.shoppinglist.presentation.ProductFilter.COMPLETED -> {
+                    // No action buttons for Completed list
                 }
             }
         }

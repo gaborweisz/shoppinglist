@@ -13,4 +13,9 @@ interface ShoppingListRepository {
     suspend fun deleteProduct(product: Product): Result<Unit>
     suspend fun toggleProductDone(productId: Long): Result<Unit>
     suspend fun updateCategory(oldCategory: String, newCategory: String): Result<Unit>
+    suspend fun startNewShopping(): Result<Unit>
+    suspend fun addToActiveList(productId: Long): Result<Unit>
+    suspend fun removeFromActiveList(productId: Long): Result<Unit>
+    suspend fun markAsCompleted(productId: Long): Result<Unit>
+    suspend fun moveBackToActive(productId: Long): Result<Unit>
 }

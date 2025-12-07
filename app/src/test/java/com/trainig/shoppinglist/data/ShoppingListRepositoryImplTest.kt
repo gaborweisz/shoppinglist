@@ -60,18 +60,71 @@ class ShoppingListRepositoryImplTest {
     }
 
     @Test
-    fun `active products filter shows only undone items`() = runTest {
+    fun `active products filter shows only active and undone items`() = runTest {
         // Given
-        repository.addProduct("Milk")
+        val milkId = repository.addProduct("Milk").getOrThrow()
         val breadId = repository.addProduct("Bread").getOrThrow()
-        repository.addProduct("Eggs")
-        repository.toggleProductDone(breadId)
+        val eggsId = repository.addProduct("Eggs").getOrThrow()
+
+        // Add milk and bread to active list
+        repository.addToActiveList(milkId)
+        repository.addToActiveList(breadId)
+
+        // Mark bread as completed (moves from active to completed)
+        repository.markAsCompleted(breadId)
 
         // When
         val activeProducts = repository.getActiveProducts().first()
 
         // Then
-        assertEquals(2, activeProducts.size)
+        assertEquals(1, activeProducts.size)
+        assertEquals("Milk", activeProducts[0].name)
+        assertTrue(activeProducts[0].isActive)
         assertTrue(activeProducts.none { it.isDone })
+    }
+
+    @Test
+    fun `completed products filter shows only done items`() = runTest {
+        // Given
+        val milkId = repository.addProduct("Milk").getOrThrow()
+        val breadId = repository.addProduct("Bread").getOrThrow()
+
+        // Add to active list first
+        repository.addToActiveList(milkId)
+        repository.addToActiveList(breadId)
+
+        // Mark milk as completed
+        repository.markAsCompleted(milkId)
+
+        // When
+        val completedProducts = repository.getCompletedProducts().first()
+
+        // Then
+        assertEquals(1, completedProducts.size)
+        assertEquals("Milk", completedProducts[0].name)
+        assertTrue(completedProducts[0].isDone)
+    }
+
+    @Test
+    fun `start new shopping clears active and completed flags`() = runTest {
+        // Given
+        val milkId = repository.addProduct("Milk").getOrThrow()
+        repository.addToActiveList(milkId)
+        repository.markAsCompleted(milkId)
+
+        // When
+        repository.startNewShopping()
+
+        // Then
+        val allProducts = repository.getAllProducts().first()
+        assertEquals(1, allProducts.size)
+        assertEquals(false, allProducts[0].isActive)
+        assertEquals(false, allProducts[0].isDone)
+
+        val activeProducts = repository.getActiveProducts().first()
+        assertEquals(0, activeProducts.size)
+
+        val completedProducts = repository.getCompletedProducts().first()
+        assertEquals(0, completedProducts.size)
     }
 }

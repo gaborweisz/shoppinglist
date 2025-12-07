@@ -20,7 +20,7 @@ class FakeProductDao : ProductDao {
 
     override fun getActiveProducts(): Flow<List<Product>> =
         products.map { list ->
-            list.filter { !it.isDone }
+            list.filter { it.isActive && !it.isDone }
                 .sortedWith(compareBy(
                     { if (it.category.isEmpty()) 1 else 0 },
                     { it.category },
@@ -77,6 +77,62 @@ class FakeProductDao : ProductDao {
             currentList.map { product ->
                 if (product.category == oldCategory) {
                     product.copy(category = newCategory)
+                } else {
+                    product
+                }
+            }
+        }
+    }
+
+    override suspend fun startNewShopping() {
+        products.update { currentList ->
+            currentList.map { product ->
+                product.copy(isActive = false, isDone = false)
+            }
+        }
+    }
+
+    override suspend fun addToActiveList(productId: Long) {
+        products.update { currentList ->
+            currentList.map { product ->
+                if (product.id == productId) {
+                    product.copy(isActive = true, isDone = false)
+                } else {
+                    product
+                }
+            }
+        }
+    }
+
+    override suspend fun removeFromActiveList(productId: Long) {
+        products.update { currentList ->
+            currentList.map { product ->
+                if (product.id == productId) {
+                    product.copy(isActive = false, isDone = false)
+                } else {
+                    product
+                }
+            }
+        }
+    }
+
+    override suspend fun markAsCompleted(productId: Long) {
+        products.update { currentList ->
+            currentList.map { product ->
+                if (product.id == productId) {
+                    product.copy(isActive = false, isDone = true)
+                } else {
+                    product
+                }
+            }
+        }
+    }
+
+    override suspend fun moveBackToActive(productId: Long) {
+        products.update { currentList ->
+            currentList.map { product ->
+                if (product.id == productId) {
+                    product.copy(isActive = true, isDone = false)
                 } else {
                     product
                 }

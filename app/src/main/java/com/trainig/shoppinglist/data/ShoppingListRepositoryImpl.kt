@@ -56,4 +56,34 @@ class ShoppingListRepositoryImpl @Inject constructor(
             productDao.updateCategory(oldCategory.trim(), newCategory.trim())
         }
     }
+
+    override suspend fun startNewShopping(): Result<Unit> {
+        return kotlin.runCatching {
+            productDao.startNewShopping()
+        }
+    }
+
+    override suspend fun addToActiveList(productId: Long): Result<Unit> {
+        return kotlin.runCatching {
+            productDao.addToActiveList(productId)
+        }
+    }
+
+    override suspend fun removeFromActiveList(productId: Long): Result<Unit> {
+        return kotlin.runCatching {
+            productDao.removeFromActiveList(productId)
+        }
+    }
+
+    override suspend fun markAsCompleted(productId: Long): Result<Unit> {
+        return kotlin.runCatching {
+            productDao.markAsCompleted(productId)
+        }
+    }
+
+    override suspend fun moveBackToActive(productId: Long): Result<Unit> {
+        return kotlin.runCatching {
+            productDao.moveBackToActive(productId)
+        }
+    }
 }

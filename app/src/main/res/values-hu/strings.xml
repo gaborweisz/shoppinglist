@@ -25,4 +25,35 @@
     <string name="note">Megjegyzés</string>
     <string name="save">Mentés</string>
     <string name="cancel">Mégse</string>
+
+    <!-- New Shopping Dialog -->
+    <string name="new_shopping">Új bevásárlás</string>
+    <string name="start_new_shopping_title">Új bevásárlás indítása?</string>
+    <string name="start_new_shopping_message">%d aktív terméked van. Az új bevásárlás indítása törli az aktív és kész listákat. Folytatod?</string>
+    <string name="yes">Igen</string>
+
+    <!-- Delete Confirmation Dialog -->
+    <string name="delete_item_title">Törlöd a terméket?</string>
+    <string name="delete_item_message">Biztosan törlöd ezt a terméket?</string>
+    <string name="delete_item_name">Név: %s</string>
+    <string name="delete_item_note">Megjegyzés: %s</string>
+    <string name="delete">Törlés</string>
+
+    <!-- Theme Toggle -->
+    <string name="switch_to_light_mode">Váltás világos módra</string>
+    <string name="switch_to_dark_mode">Váltás sötét módra</string>
+
+    <!-- New Shopping Message -->
+    <string name="add_items_to_active_list">Termékek hozzáadása az aktív listához</string>
+    <string name="new_shopping_started">Új bevásárlás elindult! Adj hozzá termékeket az aktív listához.</string>
+
+    <!-- Language Selection -->
+    <string name="select_language">Nyelv kiválasztása</string>
+    <string name="language_english">English</string>
+    <string name="language_hungarian">Magyar</string>
+    <string name="language_german">Deutsch</string>
+
+    <!-- Action Buttons -->
+    <string name="button_add">Hozzáad</string>
+    <string name="button_remove">Eltávolít</string>
 </resources>

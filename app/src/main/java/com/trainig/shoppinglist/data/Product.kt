@@ -7,7 +7,7 @@ import androidx.room.PrimaryKey
 
 @Entity(
     tableName = "products",
-    indices = [Index("is_done")]
+    indices = [Index("is_done"), Index("is_active")]
 )
 data class Product(
     @PrimaryKey(autoGenerate = true)
@@ -26,5 +26,8 @@ data class Product(
     val category: String = "",
 
     @ColumnInfo(name = "is_done", defaultValue = "0")
-    val isDone: Boolean = false
+    val isDone: Boolean = false,
+
+    @ColumnInfo(name = "is_active", defaultValue = "0")
+    val isActive: Boolean = false
 )

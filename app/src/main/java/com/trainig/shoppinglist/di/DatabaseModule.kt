@@ -6,6 +6,7 @@ import com.trainig.shoppinglist.data.ProductDao
 import com.trainig.shoppinglist.data.ShoppingListDatabase
 import com.trainig.shoppinglist.data.ShoppingListRepositoryImpl
 import com.trainig.shoppinglist.data.ThemePreferences
+import com.trainig.shoppinglist.data.ThemePreferencesImpl
 import com.trainig.shoppinglist.domain.ShoppingListRepository
 import dagger.Module
 import dagger.Provides
@@ -28,6 +29,7 @@ object DatabaseModule {
             "shopping_list.db"
         )
             .addMigrations(com.trainig.shoppinglist.data.MIGRATION_1_2)
+            .addMigrations(com.trainig.shoppinglist.data.MIGRATION_2_3)
             .build()
     }
 
@@ -47,5 +49,5 @@ object DatabaseModule {
     @Singleton
     fun provideThemePreferences(
         @ApplicationContext context: Context
-    ): ThemePreferences = ThemePreferences(context)
+    ): ThemePreferences = ThemePreferencesImpl(context)
 }

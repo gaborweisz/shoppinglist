@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -25,6 +26,14 @@ class ShoppingListViewModel @Inject constructor(
 
     // Dark mode state
     val isDarkMode: StateFlow<Boolean?> = themePreferences.isDarkMode
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = null
+        )
+
+    // Language state
+    val language: StateFlow<String?> = themePreferences.language
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
@@ -55,6 +64,14 @@ class ShoppingListViewModel @Inject constructor(
             initialValue = emptyList()
         )
 
+    val activeProductsCount = repository.getActiveProducts()
+        .map { it.size }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = 0
+        )
+
     private val _uiState = MutableStateFlow<UiState>(UiState.Success)
     val uiState: StateFlow<UiState> = _uiState
 
@@ -66,6 +83,12 @@ class ShoppingListViewModel @Inject constructor(
         viewModelScope.launch {
             val currentMode = isDarkMode.value ?: false
             themePreferences.setDarkMode(!currentMode)
+        }
+    }
+
+    fun setLanguage(languageCode: String) {
+        viewModelScope.launch {
+            themePreferences.setLanguage(languageCode)
         }
     }
 
@@ -111,6 +134,41 @@ class ShoppingListViewModel @Inject constructor(
         viewModelScope.launch {
             repository.updateCategory(oldCategory, newCategory)
                 .onFailure { _uiState.value = UiState.Error(it.message ?: "Failed to update category") }
+        }
+    }
+
+    fun startNewShopping() {
+        viewModelScope.launch {
+            repository.startNewShopping()
+                .onFailure { _uiState.value = UiState.Error(it.message ?: "Failed to start new shopping") }
+        }
+    }
+
+    fun addToActiveList(productId: Long) {
+        viewModelScope.launch {
+            repository.addToActiveList(productId)
+                .onFailure { _uiState.value = UiState.Error(it.message ?: "Failed to add to active list") }
+        }
+    }
+
+    fun removeFromActiveList(productId: Long) {
+        viewModelScope.launch {
+            repository.removeFromActiveList(productId)
+                .onFailure { _uiState.value = UiState.Error(it.message ?: "Failed to remove from active list") }
+        }
+    }
+
+    fun markAsCompleted(productId: Long) {
+        viewModelScope.launch {
+            repository.markAsCompleted(productId)
+                .onFailure { _uiState.value = UiState.Error(it.message ?: "Failed to mark as completed") }
+        }
+    }
+
+    fun moveBackToActive(productId: Long) {
+        viewModelScope.launch {
+            repository.moveBackToActive(productId)
+                .onFailure { _uiState.value = UiState.Error(it.message ?: "Failed to move back to active") }
         }
     }
 
