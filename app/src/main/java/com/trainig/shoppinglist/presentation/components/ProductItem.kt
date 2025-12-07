@@ -74,10 +74,9 @@ fun ProductItem(
     onEdit: () -> Unit,
     modifier: Modifier = Modifier,
     showCategory: Boolean = true,
-    showDelete: Boolean = true
+    showDelete: Boolean = true,
+    isDarkTheme: Boolean = isSystemInDarkTheme()
 ) {
-    val isDarkTheme = isSystemInDarkTheme()
-
     // Get the category color for the entire card based on theme
     val cardColor = if (product.category.isNotBlank()) {
         getCategoryColor(product.category, isDarkTheme)

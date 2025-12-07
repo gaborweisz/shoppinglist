@@ -3,6 +3,7 @@ package com.trainig.shoppinglist.presentation
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.trainig.shoppinglist.data.Product
+import com.trainig.shoppinglist.data.ThemePreferences
 import com.trainig.shoppinglist.domain.ShoppingListRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,11 +16,20 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ShoppingListViewModel @Inject constructor(
-    private val repository: ShoppingListRepository
+    private val repository: ShoppingListRepository,
+    private val themePreferences: ThemePreferences
 ) : ViewModel() {
 
     private val _filter = MutableStateFlow(ProductFilter.ALL)
     val filter: StateFlow<ProductFilter> = _filter
+
+    // Dark mode state
+    val isDarkMode: StateFlow<Boolean?> = themePreferences.isDarkMode
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = null
+        )
 
     val products = combine(
         _filter,
@@ -50,6 +60,13 @@ class ShoppingListViewModel @Inject constructor(
 
     fun setFilter(filter: ProductFilter) {
         _filter.value = filter
+    }
+
+    fun toggleDarkMode() {
+        viewModelScope.launch {
+            val currentMode = isDarkMode.value ?: false
+            themePreferences.setDarkMode(!currentMode)
+        }
     }
 
     fun addProduct(name: String, quantity: String? = null, note: String? = null, category: String = "") {

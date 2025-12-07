@@ -5,6 +5,7 @@ import androidx.room.Room
 import com.trainig.shoppinglist.data.ProductDao
 import com.trainig.shoppinglist.data.ShoppingListDatabase
 import com.trainig.shoppinglist.data.ShoppingListRepositoryImpl
+import com.trainig.shoppinglist.data.ThemePreferences
 import com.trainig.shoppinglist.domain.ShoppingListRepository
 import dagger.Module
 import dagger.Provides
@@ -41,4 +42,10 @@ object DatabaseModule {
     fun provideShoppingListRepository(
         repository: ShoppingListRepositoryImpl
     ): ShoppingListRepository = repository
+
+    @Provides
+    @Singleton
+    fun provideThemePreferences(
+        @ApplicationContext context: Context
+    ): ThemePreferences = ThemePreferences(context)
 }

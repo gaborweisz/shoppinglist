@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.trainig.shoppinglist.data.Product
@@ -23,16 +24,11 @@ fun EditProductDialog(
     var category by remember(product) { mutableStateOf(product?.category ?: "") }
     var showError by remember { mutableStateOf(false) }
     var expanded by remember { mutableStateOf(false) }
+    var isFocused by remember { mutableStateOf(false) }
 
-    // Filter categories based on current input
-    val filteredCategories = remember(category, availableCategories) {
-        if (category.isEmpty()) {
-            availableCategories
-        } else {
-            availableCategories.filter { categoryOption ->
-                categoryOption.contains(category as CharSequence, ignoreCase = true)
-            }
-        }
+    // Filter categories based on current input - always recalculate on change
+    val filteredCategories = availableCategories.filter { categoryOption ->
+        category.isEmpty() || categoryOption.contains(category, ignoreCase = true)
     }
 
     AlertDialog(
@@ -73,47 +69,54 @@ fun EditProductDialog(
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                // Category dropdown with autocomplete
-                ExposedDropdownMenuBox(
-                    expanded = expanded,
-                    onExpandedChange = { newExpanded ->
-                        expanded = newExpanded
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
+                // Category field with dropdown - using Box with regular DropdownMenu
+                Box(modifier = Modifier.fillMaxWidth()) {
                     OutlinedTextField(
                         value = category,
                         onValueChange = { newValue ->
                             category = newValue
-                            expanded = true // Show dropdown when typing
+                            // Keep dropdown open, but don't force it open if user closed it
+                            // Only auto-open when field is focused
                         },
                         label = { Text("${stringResource(R.string.category)} (${stringResource(R.string.optional)})") },
-                        trailingIcon = {
-                            ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .onFocusChanged { focusState ->
+                                if (focusState.isFocused && !isFocused) {
+                                    // When field gains focus, show all categories
+                                    isFocused = true
+                                    expanded = true
+                                } else if (!focusState.isFocused) {
+                                    isFocused = false
+                                    // Close dropdown when focus is lost
+                                    expanded = false
+                                }
+                            },
+                        singleLine = true
+                    )
+
+                    DropdownMenu(
+                        expanded = expanded && (filteredCategories.isNotEmpty() || availableCategories.isNotEmpty()),
+                        onDismissRequest = {
+                            expanded = false
+                            isFocused = false
                         },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .menuAnchor(),
-                        colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
-                    )
+                            .heightIn(max = 200.dp)
+                    ) {
+                        // Show filtered categories, or all categories if filter is empty
+                        val categoriesToShow = if (category.isEmpty()) availableCategories else filteredCategories
 
-                    if (filteredCategories.isNotEmpty()) {
-                        ExposedDropdownMenu(
-                            expanded = expanded,
-                            onDismissRequest = {
-                                expanded = false
-                            },
-                            modifier = Modifier.heightIn(max = 200.dp)
-                        ) {
-                            filteredCategories.forEach { categoryOption ->
-                                DropdownMenuItem(
-                                    text = { Text(categoryOption) },
-                                    onClick = {
-                                        category = categoryOption
-                                        expanded = false
-                                    }
-                                )
-                            }
+                        categoriesToShow.forEach { categoryOption ->
+                            DropdownMenuItem(
+                                text = { Text(categoryOption) },
+                                onClick = {
+                                    category = categoryOption
+                                    expanded = false
+                                    isFocused = false
+                                }
+                            )
                         }
                     }
                 }

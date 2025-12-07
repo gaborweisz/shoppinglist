@@ -35,12 +35,15 @@ fun ShoppingListScreen(
     var productToEdit by remember { mutableStateOf<Product?>(null) }
     var categoryToEdit by remember { mutableStateOf<String?>(null) }
     val context = LocalContext.current
-    val isDarkTheme = isSystemInDarkTheme()
 
     val products by viewModel.products.collectAsStateWithLifecycle(initialValue = emptyList())
     val categories by viewModel.categories.collectAsStateWithLifecycle(initialValue = emptyList())
     val filter by viewModel.filter.collectAsStateWithLifecycle(initialValue = ProductFilter.ALL)
     val uiState by viewModel.uiState.collectAsStateWithLifecycle(initialValue = UiState.Success)
+    val darkModePreference by viewModel.isDarkMode.collectAsStateWithLifecycle(initialValue = null)
+
+    // Use preference if available, otherwise fall back to system setting
+    val isDarkTheme = darkModePreference ?: isSystemInDarkTheme()
 
     // Dynamic background color based on theme
     val backgroundColor = if (isDarkTheme) {
@@ -103,35 +106,53 @@ fun ShoppingListScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Share button on the left
-                IconButton(
-                    onClick = {
-                        val shareText = viewModel.formatShoppingListForSharing(products)
-                        val sendIntent = Intent().apply {
-                            action = Intent.ACTION_SEND
-                            putExtra(Intent.EXTRA_TEXT, shareText)
-                            type = "text/plain"
-                            // Try to open Facebook Messenger specifically
-                            setPackage("com.facebook.orca")
-                        }
-
-                        // Check if Messenger is installed, if not use general share
-                        try {
-                            context.startActivity(sendIntent)
-                        } catch (e: Exception) {
-                            // Messenger not installed, use general share chooser
-                            val chooserIntent = Intent.createChooser(
-                                sendIntent.apply { setPackage(null) },
-                                context.getString(R.string.share_shopping_list)
-                            )
-                            context.startActivity(chooserIntent)
-                        }
-                    }
+                // Theme toggle and Share buttons on the left
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(0.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Share,
-                        contentDescription = stringResource(R.string.share_shopping_list)
-                    )
+                    // Theme toggle button - shows sun in dark mode, moon in light mode
+                    IconButton(
+                        onClick = { viewModel.toggleDarkMode() }
+                    ) {
+                        Icon(
+                            painter = painterResource(
+                                id = if (isDarkTheme) R.drawable.ic_sun else R.drawable.ic_moon
+                            ),
+                            contentDescription = if (isDarkTheme) "Switch to light mode" else "Switch to dark mode"
+                        )
+                    }
+
+                    // Share button
+                    IconButton(
+                        onClick = {
+                            val shareText = viewModel.formatShoppingListForSharing(products)
+                            val sendIntent = Intent().apply {
+                                action = Intent.ACTION_SEND
+                                putExtra(Intent.EXTRA_TEXT, shareText)
+                                type = "text/plain"
+                                // Try to open Facebook Messenger specifically
+                                setPackage("com.facebook.orca")
+                            }
+
+                            // Check if Messenger is installed, if not use general share
+                            try {
+                                context.startActivity(sendIntent)
+                            } catch (e: Exception) {
+                                // Messenger not installed, use general share chooser
+                                val chooserIntent = Intent.createChooser(
+                                    sendIntent.apply { setPackage(null) },
+                                    context.getString(R.string.share_shopping_list)
+                                )
+                                context.startActivity(chooserIntent)
+                            }
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Share,
+                            contentDescription = stringResource(R.string.share_shopping_list)
+                        )
+                    }
                 }
 
                 // Filter chips on the right
@@ -171,6 +192,7 @@ fun ShoppingListScreen(
                         onDelete = viewModel::deleteProduct,
                         onEdit = { productToEdit = it },
                         onCategoryClick = { categoryToEdit = it },
+                        isDarkTheme = isDarkTheme,
                         modifier = Modifier.fillMaxSize()
                     )
                 }
@@ -247,6 +269,7 @@ private fun ProductsList(
     onDelete: (Product) -> Unit,
     onEdit: (Product) -> Unit,
     onCategoryClick: (String) -> Unit,
+    isDarkTheme: Boolean,
     modifier: Modifier = Modifier
 ) {
     // Group products by category
@@ -297,7 +320,8 @@ private fun ProductsList(
                     onDelete = { onDelete(product) },
                     onEdit = { onEdit(product) },
                     showCategory = false,
-                    showDelete = filter == ProductFilter.ALL
+                    showDelete = filter == ProductFilter.ALL,
+                    isDarkTheme = isDarkTheme
                 )
             }
         }
