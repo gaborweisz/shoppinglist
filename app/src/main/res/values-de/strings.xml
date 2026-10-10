@@ -56,4 +56,23 @@
     <!-- Action Buttons -->
     <string name="button_add">Hinzufügen</string>
     <string name="button_remove">Entfernen</string>
+
+    <!-- Shared lists -->
+    <string name="more_options">Weitere Optionen</string>
+    <string name="import_shared_list">Geteilte Liste aus Zwischenablage importieren</string>
+    <string name="share_link_label">In der Einkaufslisten-App öffnen:</string>
+    <string name="incoming_new_title">Einkaufsliste erhalten</string>
+    <string name="incoming_new_message">Eine Einkaufsliste mit %1$d Artikeln wurde mit dir geteilt:</string>
+    <string name="incoming_update_title">Einkaufsliste aktualisiert</string>
+    <string name="incoming_update_summary">Die geteilte Liste wurde geändert.\nNeue Artikel: %1$d\nGeänderte Artikel: %2$d\nEntfernte Artikel: %3$d</string>
+    <string name="incoming_update_no_changes">Es gibt eine neue Version der geteilten Liste, deine offenen Artikel sind aber bereits aktuell.</string>
+    <string name="incoming_kept_completed">%1$d bereits erledigte Artikel bleiben erledigt.</string>
+    <string name="incoming_accept">Annehmen</string>
+    <string name="incoming_decline">Ablehnen</string>
+    <string name="incoming_add_to_list">Zu meiner Liste hinzufügen</string>
+    <string name="incoming_replace_list">Meine Liste ersetzen</string>
+    <string name="incoming_accepted">Geteilte Liste angenommen</string>
+    <string name="incoming_invalid">Keine geteilte Einkaufsliste gefunden</string>
+    <string name="incoming_already_applied">Du hast diese Version der geteilten Liste bereits</string>
+    <string name="incoming_own_list">Das ist deine eigene Einkaufsliste</string>
 </resources>

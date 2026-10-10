@@ -46,6 +46,14 @@ class FakeProductDao : ProductDao {
                 .sorted()
         }
 
+    override suspend fun getAllProductsSnapshot(): List<Product> = products.value
+
+    override suspend fun setRemoteId(productId: Long, remoteId: String) {
+        products.update { currentList ->
+            currentList.map { if (it.id == productId) it.copy(remoteId = remoteId) else it }
+        }
+    }
+
     override suspend fun insertProduct(product: Product): Long {
         val id = idCounter++
         products.update { currentList ->

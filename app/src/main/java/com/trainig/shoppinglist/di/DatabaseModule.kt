@@ -4,7 +4,12 @@ import android.content.Context
 import androidx.room.Room
 import com.trainig.shoppinglist.data.ProductDao
 import com.trainig.shoppinglist.data.ShoppingListDatabase
+import com.trainig.shoppinglist.data.RoomTransactionRunner
+import com.trainig.shoppinglist.data.ShareSettings
+import com.trainig.shoppinglist.data.ShareSettingsImpl
+import com.trainig.shoppinglist.data.SharedListDao
 import com.trainig.shoppinglist.data.ShoppingListRepositoryImpl
+import com.trainig.shoppinglist.data.TransactionRunner
 import com.trainig.shoppinglist.data.ThemePreferences
 import com.trainig.shoppinglist.data.ThemePreferencesImpl
 import com.trainig.shoppinglist.domain.ShoppingListRepository
@@ -30,6 +35,7 @@ object DatabaseModule {
         )
             .addMigrations(com.trainig.shoppinglist.data.MIGRATION_1_2)
             .addMigrations(com.trainig.shoppinglist.data.MIGRATION_2_3)
+            .addMigrations(com.trainig.shoppinglist.data.MIGRATION_3_4)
             .build()
     }
 
@@ -38,6 +44,23 @@ object DatabaseModule {
     fun provideProductDao(database: ShoppingListDatabase): ProductDao {
         return database.productDao()
     }
+
+    @Provides
+    @Singleton
+    fun provideSharedListDao(database: ShoppingListDatabase): SharedListDao {
+        return database.sharedListDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideTransactionRunner(database: ShoppingListDatabase): TransactionRunner =
+        RoomTransactionRunner(database)
+
+    @Provides
+    @Singleton
+    fun provideShareSettings(
+        @ApplicationContext context: Context
+    ): ShareSettings = ShareSettingsImpl(context)
 
     @Provides
     @Singleton

@@ -56,4 +56,23 @@
     <!-- Action Buttons -->
     <string name="button_add">Add</string>
     <string name="button_remove">Remove</string>
+
+    <!-- Shared lists -->
+    <string name="more_options">More options</string>
+    <string name="import_shared_list">Import shared list from clipboard</string>
+    <string name="share_link_label">Open in the Shopping List app:</string>
+    <string name="incoming_new_title">Shopping list received</string>
+    <string name="incoming_new_message">A shopping list with %1$d items was shared with you:</string>
+    <string name="incoming_update_title">Shopping list updated</string>
+    <string name="incoming_update_summary">The shared list has changed.\nNew items: %1$d\nChanged items: %2$d\nRemoved items: %3$d</string>
+    <string name="incoming_update_no_changes">The shared list has a new version, but your open items are already up to date.</string>
+    <string name="incoming_kept_completed">%1$d items you already completed stay completed.</string>
+    <string name="incoming_accept">Accept</string>
+    <string name="incoming_decline">Decline</string>
+    <string name="incoming_add_to_list">Add to my list</string>
+    <string name="incoming_replace_list">Replace my list</string>
+    <string name="incoming_accepted">Shared list accepted</string>
+    <string name="incoming_invalid">No shared shopping list found</string>
+    <string name="incoming_already_applied">You already have this version of the shared list</string>
+    <string name="incoming_own_list">This is your own shopping list</string>
 </resources>
