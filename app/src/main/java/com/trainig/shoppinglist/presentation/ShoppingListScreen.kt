@@ -7,12 +7,14 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -22,6 +24,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.trainig.shoppinglist.data.Product
 import com.trainig.shoppinglist.presentation.components.EditProductDialog
 import com.trainig.shoppinglist.presentation.components.EditCategoryDialog
+import com.trainig.shoppinglist.presentation.components.IncomingShareDialog
 import com.trainig.shoppinglist.presentation.components.ProductItem
 import android.content.Intent
 import com.trainig.shoppinglist.R
@@ -40,7 +43,9 @@ fun ShoppingListScreen(
     var productToDelete by remember { mutableStateOf<Product?>(null) }
     var showNewShoppingMessage by remember { mutableStateOf(false) }
     var showLanguageDialog by remember { mutableStateOf(false) }
+    var showOverflowMenu by remember { mutableStateOf(false) }
     val context = LocalContext.current
+    val clipboardManager = LocalClipboardManager.current
 
     val products by viewModel.products.collectAsStateWithLifecycle(initialValue = emptyList())
     val categories by viewModel.categories.collectAsStateWithLifecycle(initialValue = emptyList())
@@ -49,6 +54,41 @@ fun ShoppingListScreen(
     val darkModePreference by viewModel.isDarkMode.collectAsStateWithLifecycle(initialValue = null)
     val activeProductsCount by viewModel.activeProductsCount.collectAsStateWithLifecycle(initialValue = 0)
     val currentLanguage by viewModel.language.collectAsStateWithLifecycle(initialValue = null)
+    val incomingShare by viewModel.incomingShare.collectAsStateWithLifecycle()
+    val shareMessage by viewModel.shareMessage.collectAsStateWithLifecycle()
+    val shareRequest by viewModel.shareRequest.collectAsStateWithLifecycle()
+
+    // Send the prepared share: readable list plus a link the receiver's app can import
+    LaunchedEffect(shareRequest) {
+        val request = shareRequest ?: return@LaunchedEffect
+        viewModel.onShareRequestHandled()
+
+        val shareText = buildString {
+            append(viewModel.formatShoppingListForSharing(products))
+            request.link?.let {
+                append("\n")
+                append(context.getString(R.string.share_link_label))
+                append("\n")
+                append(it)
+            }
+        }
+        val sendIntent = Intent().apply {
+            action = Intent.ACTION_SEND
+            putExtra(Intent.EXTRA_TEXT, shareText)
+            type = "text/plain"
+            setPackage("com.facebook.orca")
+        }
+
+        try {
+            context.startActivity(sendIntent)
+        } catch (e: Exception) {
+            val chooserIntent = Intent.createChooser(
+                sendIntent.apply { setPackage(null) },
+                context.getString(R.string.share_shopping_list)
+            )
+            context.startActivity(chooserIntent)
+        }
+    }
 
     // Remove the automatic language change effect that causes infinite loop
     // Language will only change when user explicitly selects it from the dialog
@@ -118,25 +158,7 @@ fun ShoppingListScreen(
 
                     // Share button
                     IconButton(
-                        onClick = {
-                            val shareText = viewModel.formatShoppingListForSharing(products)
-                            val sendIntent = Intent().apply {
-                                action = Intent.ACTION_SEND
-                                putExtra(Intent.EXTRA_TEXT, shareText)
-                                type = "text/plain"
-                                setPackage("com.facebook.orca")
-                            }
-
-                            try {
-                                context.startActivity(sendIntent)
-                            } catch (e: Exception) {
-                                val chooserIntent = Intent.createChooser(
-                                    sendIntent.apply { setPackage(null) },
-                                    context.getString(R.string.share_shopping_list)
-                                )
-                                context.startActivity(chooserIntent)
-                            }
-                        },
+                        onClick = { viewModel.shareList() },
                         modifier = Modifier.padding(end = 4.dp)
                     ) {
                         Icon(
@@ -148,13 +170,36 @@ fun ShoppingListScreen(
 
                     IconButton(
                         onClick = { /* TODO: Navigate to cart screen */ },
-                        modifier = Modifier.padding(end = 8.dp)
+                        modifier = Modifier.padding(end = 4.dp)
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.shopping_list),
                             contentDescription = stringResource(R.string.view_cart),
                             tint = titleIconColor
                         )
+                    }
+
+                    // Overflow menu
+                    Box {
+                        IconButton(onClick = { showOverflowMenu = true }) {
+                            Icon(
+                                imageVector = Icons.Default.MoreVert,
+                                contentDescription = stringResource(R.string.more_options),
+                                tint = titleIconColor
+                            )
+                        }
+                        DropdownMenu(
+                            expanded = showOverflowMenu,
+                            onDismissRequest = { showOverflowMenu = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.import_shared_list)) },
+                                onClick = {
+                                    showOverflowMenu = false
+                                    viewModel.handleIncomingText(clipboardManager.getText()?.text)
+                                }
+                            )
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -282,8 +327,46 @@ fun ShoppingListScreen(
                         Text(stringResource(R.string.new_shopping_started))
                     }
                 }
+
+                // Result of receiving a shared list
+                shareMessage?.let { message ->
+                    LaunchedEffect(message) {
+                        kotlinx.coroutines.delay(3000)
+                        viewModel.clearShareMessage()
+                    }
+
+                    Snackbar(
+                        modifier = Modifier
+                            .padding(16.dp)
+                            .align(Alignment.TopCenter),
+                        action = {
+                            TextButton(onClick = viewModel::clearShareMessage) {
+                                Text(stringResource(R.string.dismiss))
+                            }
+                        }
+                    ) {
+                        Text(
+                            stringResource(
+                                when (message) {
+                                    ShareMessage.ACCEPTED -> R.string.incoming_accepted
+                                    ShareMessage.INVALID -> R.string.incoming_invalid
+                                    ShareMessage.ALREADY_APPLIED -> R.string.incoming_already_applied
+                                    ShareMessage.OWN_LIST -> R.string.incoming_own_list
+                                }
+                            )
+                        )
+                    }
+                }
             }
         }
+    }
+
+    incomingShare?.let { preview ->
+        IncomingShareDialog(
+            preview = preview,
+            onAccept = viewModel::acceptIncomingShare,
+            onDecline = viewModel::declineIncomingShare
+        )
     }
 
     if (showAddDialog) {

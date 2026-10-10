@@ -17,6 +17,12 @@ interface ProductDao {
     @Query("SELECT DISTINCT category FROM products WHERE category != '' ORDER BY category ASC")
     fun getDistinctCategories(): Flow<List<String>>
 
+    @Query("SELECT * FROM products")
+    suspend fun getAllProductsSnapshot(): List<Product>
+
+    @Query("UPDATE products SET remote_id = :remoteId WHERE id = :productId")
+    suspend fun setRemoteId(productId: Long, remoteId: String)
+
     @Insert
     suspend fun insertProduct(product: Product): Long
 

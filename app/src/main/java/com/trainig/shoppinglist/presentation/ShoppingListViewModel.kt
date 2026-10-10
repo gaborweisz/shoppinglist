@@ -5,11 +5,16 @@ import androidx.lifecycle.viewModelScope
 import com.trainig.shoppinglist.data.Product
 import com.trainig.shoppinglist.data.ThemePreferences
 import com.trainig.shoppinglist.domain.ShoppingListRepository
+import com.trainig.shoppinglist.share.IncomingShareInbox
+import com.trainig.shoppinglist.share.IncomingSharePreview
+import com.trainig.shoppinglist.share.SharePayloadCodec
+import com.trainig.shoppinglist.share.ShareSyncRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -18,7 +23,9 @@ import javax.inject.Inject
 @HiltViewModel
 class ShoppingListViewModel @Inject constructor(
     private val repository: ShoppingListRepository,
-    private val themePreferences: ThemePreferences
+    private val themePreferences: ThemePreferences,
+    private val shareSyncRepository: ShareSyncRepository,
+    private val incomingShareInbox: IncomingShareInbox
 ) : ViewModel() {
 
     private val _filter = MutableStateFlow(ProductFilter.ALL)
@@ -74,6 +81,25 @@ class ShoppingListViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow<UiState>(UiState.Success)
     val uiState: StateFlow<UiState> = _uiState
+
+    // Received list waiting for the user to accept or decline (NewList or Update)
+    private val _incomingShare = MutableStateFlow<IncomingSharePreview?>(null)
+    val incomingShare: StateFlow<IncomingSharePreview?> = _incomingShare
+
+    private val _shareMessage = MutableStateFlow<ShareMessage?>(null)
+    val shareMessage: StateFlow<ShareMessage?> = _shareMessage
+
+    private val _shareRequest = MutableStateFlow<ShareRequest?>(null)
+    val shareRequest: StateFlow<ShareRequest?> = _shareRequest
+
+    init {
+        viewModelScope.launch {
+            incomingShareInbox.text.filterNotNull().collect { text ->
+                incomingShareInbox.consume()
+                handleIncomingText(text)
+            }
+        }
+    }
 
     fun setFilter(filter: ProductFilter) {
         _filter.value = filter
@@ -176,6 +202,66 @@ class ShoppingListViewModel @Inject constructor(
         _uiState.value = UiState.Success
     }
 
+    // --- Sharing ---
+
+    /** Starts preparing a share; the screen sends it once [shareRequest] is set. */
+    fun shareList() {
+        viewModelScope.launch {
+            runCatching { shareSyncRepository.createShareLink() }
+                .onSuccess { _shareRequest.value = ShareRequest(it) }
+                .onFailure { _uiState.value = UiState.Error(it.message ?: "Failed to share list") }
+        }
+    }
+
+    fun onShareRequestHandled() {
+        _shareRequest.value = null
+    }
+
+    /** Looks for a shared list link in [text] and asks the user to accept it. */
+    fun handleIncomingText(text: String?) {
+        val payload = SharePayloadCodec.fromText(text)
+        if (payload == null) {
+            _shareMessage.value = ShareMessage.INVALID
+            return
+        }
+        viewModelScope.launch {
+            runCatching { shareSyncRepository.preview(payload) }
+                .onSuccess { preview ->
+                    when (preview) {
+                        is IncomingSharePreview.NewList, is IncomingSharePreview.Update -> _incomingShare.value = preview
+                        IncomingSharePreview.AlreadyApplied -> _shareMessage.value = ShareMessage.ALREADY_APPLIED
+                        IncomingSharePreview.OwnList -> _shareMessage.value = ShareMessage.OWN_LIST
+                    }
+                }
+                .onFailure { _uiState.value = UiState.Error(it.message ?: "Failed to read shared list") }
+        }
+    }
+
+    fun acceptIncomingShare(replaceActiveList: Boolean = false) {
+        val payload = when (val preview = _incomingShare.value) {
+            is IncomingSharePreview.NewList -> preview.payload
+            is IncomingSharePreview.Update -> preview.payload
+            else -> return
+        }
+        _incomingShare.value = null
+        viewModelScope.launch {
+            runCatching { shareSyncRepository.accept(payload, replaceActiveList) }
+                .onSuccess {
+                    _filter.value = ProductFilter.ACTIVE
+                    _shareMessage.value = ShareMessage.ACCEPTED
+                }
+                .onFailure { _uiState.value = UiState.Error(it.message ?: "Failed to accept shared list") }
+        }
+    }
+
+    fun declineIncomingShare() {
+        _incomingShare.value = null
+    }
+
+    fun clearShareMessage() {
+        _shareMessage.value = null
+    }
+
     fun formatShoppingListForSharing(products: List<Product>): String {
         if (products.isEmpty()) {
             return "My Shopping List is empty"
@@ -213,6 +299,13 @@ class ShoppingListViewModel @Inject constructor(
 
 enum class ProductFilter {
     ALL, ACTIVE, COMPLETED
+}
+
+/** Outgoing share; [link] is null when the active list is empty and only the text is sent. */
+data class ShareRequest(val link: String?)
+
+enum class ShareMessage {
+    ACCEPTED, INVALID, ALREADY_APPLIED, OWN_LIST
 }
 
 sealed interface UiState {

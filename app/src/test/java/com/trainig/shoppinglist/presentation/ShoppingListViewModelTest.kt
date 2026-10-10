@@ -1,7 +1,12 @@
 package com.trainig.shoppinglist.presentation
 
+import com.trainig.shoppinglist.data.DirectTransactionRunner
 import com.trainig.shoppinglist.data.FakeProductDao
+import com.trainig.shoppinglist.data.FakeShareSettings
+import com.trainig.shoppinglist.data.FakeSharedListDao
 import com.trainig.shoppinglist.data.ShoppingListRepositoryImpl
+import com.trainig.shoppinglist.share.IncomingShareInbox
+import com.trainig.shoppinglist.share.ShareSyncRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
@@ -24,10 +29,15 @@ class ShoppingListViewModelTest {
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
-        repository = ShoppingListRepositoryImpl(FakeProductDao())
+        val dao = FakeProductDao()
+        repository = ShoppingListRepositoryImpl(dao)
         viewModel = ShoppingListViewModel(
             repository,
-            themePreferences = FakeThemePreferences()
+            themePreferences = FakeThemePreferences(),
+            shareSyncRepository = ShareSyncRepository(
+                dao, FakeSharedListDao(), FakeShareSettings(), DirectTransactionRunner()
+            ),
+            incomingShareInbox = IncomingShareInbox()
         )
     }
 

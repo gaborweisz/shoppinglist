@@ -56,4 +56,23 @@
     <!-- Action Buttons -->
     <string name="button_add">Hozzáad</string>
     <string name="button_remove">Eltávolít</string>
+
+    <!-- Shared lists -->
+    <string name="more_options">További lehetőségek</string>
+    <string name="import_shared_list">Megosztott lista importálása a vágólapról</string>
+    <string name="share_link_label">Megnyitás a Bevásárlólista alkalmazásban:</string>
+    <string name="incoming_new_title">Bevásárlólista érkezett</string>
+    <string name="incoming_new_message">Megosztottak veled egy %1$d tételes bevásárlólistát:</string>
+    <string name="incoming_update_title">A bevásárlólista frissült</string>
+    <string name="incoming_update_summary">A megosztott lista megváltozott.\nÚj tételek: %1$d\nMódosított tételek: %2$d\nTörölt tételek: %3$d</string>
+    <string name="incoming_update_no_changes">A megosztott listának új verziója van, de a nyitott tételeid már naprakészek.</string>
+    <string name="incoming_kept_completed">%1$d már teljesített tétel teljesített marad.</string>
+    <string name="incoming_accept">Elfogadás</string>
+    <string name="incoming_decline">Elutasítás</string>
+    <string name="incoming_add_to_list">Hozzáadás a listámhoz</string>
+    <string name="incoming_replace_list">Listám cseréje</string>
+    <string name="incoming_accepted">Megosztott lista elfogadva</string>
+    <string name="incoming_invalid">Nem található megosztott bevásárlólista</string>
+    <string name="incoming_already_applied">Ez a verzió már megvan a megosztott listából</string>
+    <string name="incoming_own_list">Ez a saját bevásárlólistád</string>
 </resources>

@@ -1,6 +1,7 @@
 package com.trainig.shoppinglist
 
 import android.content.Context
+import android.content.Intent
 import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
@@ -13,6 +14,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import com.trainig.shoppinglist.data.ThemePreferences
 import com.trainig.shoppinglist.presentation.ShoppingListScreen
+import com.trainig.shoppinglist.share.IncomingShareInbox
 import com.trainig.shoppinglist.ui.theme.ShoppingListTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.first
@@ -26,9 +28,15 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var themePreferences: ThemePreferences
 
+    @Inject
+    lateinit var incomingShareInbox: IncomingShareInbox
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        // Only on first launch, so a recreate (rotation, language change) does not re-import
+        if (savedInstanceState == null) handleShareIntent(intent)
 
         setContent {
             ShoppingListTheme {
@@ -40,6 +48,20 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        handleShareIntent(intent)
+    }
+
+    private fun handleShareIntent(intent: Intent?) {
+        val text = when (intent?.action) {
+            Intent.ACTION_VIEW -> intent.dataString
+            Intent.ACTION_SEND -> intent.getStringExtra(Intent.EXTRA_TEXT)
+            else -> null
+        }
+        text?.let(incomingShareInbox::offer)
     }
 
     override fun attachBaseContext(newBase: Context) {

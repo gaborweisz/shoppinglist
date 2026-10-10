@@ -7,7 +7,7 @@ import androidx.room.PrimaryKey
 
 @Entity(
     tableName = "products",
-    indices = [Index("is_done"), Index("is_active")]
+    indices = [Index("is_done"), Index("is_active"), Index("remote_id")]
 )
 data class Product(
     @PrimaryKey(autoGenerate = true)
@@ -29,5 +29,13 @@ data class Product(
     val isDone: Boolean = false,
 
     @ColumnInfo(name = "is_active", defaultValue = "0")
-    val isActive: Boolean = false
+    val isActive: Boolean = false,
+
+    // Stable id shared across devices, assigned when the item is first shared
+    @ColumnInfo(name = "remote_id")
+    val remoteId: String? = null,
+
+    // Id of the shared list this item was received from, null for own items
+    @ColumnInfo(name = "shared_list_id")
+    val sharedListId: String? = null
 )
